@@ -1,28 +1,57 @@
 package parser
 
 import (
-	"fmt"
-
 	"github.com/amirintech/hydra-compiler/ast"
 	"github.com/amirintech/hydra-compiler/lexer"
 	"github.com/amirintech/hydra-compiler/token"
 )
 
+// types
+type (
+	prefixParseFunc func() ast.Expression
+	infixParseFunc  func(ast.Expression) ast.Expression
+)
+
 type Parser struct {
-	lexer     *lexer.Lexer
-	currToken *token.Token
-	peekToken *token.Token
-	errors    []string
+	lexer            *lexer.Lexer
+	currToken        *token.Token
+	peekToken        *token.Token
+	errors           []string
+	prefixParseFuncs map[token.TokeType]prefixParseFunc
+	infixParseFuncs  map[token.TokeType]infixParseFunc
 }
 
+// functions
 func New(l *lexer.Lexer) *Parser {
 	parser := &Parser{
-		lexer:  l,
-		errors: []string{},
+		lexer:            l,
+		errors:           []string{},
+		prefixParseFuncs: map[token.TokeType]prefixParseFunc{},
+		infixParseFuncs:  map[token.TokeType]infixParseFunc{},
 	}
 
 	parser.nextToken() // init peekToken
 	parser.nextToken() // init currToken
+
+	// prefix functions
+	prefixTokenTypes := []token.TokeType{
+		token.IDENT, token.INT, token.BANG, token.MINUS,
+	}
+	prefixTokenFuncs := []prefixParseFunc{
+		parser.parseIdentifier, parser.parseIntegerLiteral, parser.parsePrefixExpression, parser.parsePrefixExpression,
+	}
+	for i, tokType := range prefixTokenTypes {
+		parser.registerPrefixFn(tokType, prefixTokenFuncs[i])
+	}
+
+	// infix functions
+	infixTokenTypes := []token.TokeType{
+		token.PLUS, token.MINUS, token.SLASH, token.ASTERISK,
+		token.EQUAL, token.NOT_EQUAL, token.LESS_THAN, token.GREATER_THAN,
+	}
+	for _, tokType := range infixTokenTypes {
+		parser.registerInfixFn(tokType, parser.parseInfixExpression)
+	}
 
 	return parser
 }
@@ -43,39 +72,4 @@ func (p *Parser) ParseProgram() *ast.Program {
 
 func (p *Parser) Errors() []string {
 	return p.errors
-}
-
-func (p *Parser) peekError(t token.TokeType) {
-	msg := fmt.Sprintf("expected next token to be of type '%s', but got type '%s' instead.", t, p.peekToken.Type)
-	p.errors = append(p.errors, msg)
-}
-
-func (p *Parser) parseStatement() ast.Statement {
-	switch p.currToken.Type {
-	case token.LET:
-		return p.parseLetStatement()
-	case token.RETURN:
-		return p.parseReturnStatement()
-	default:
-		return nil
-	}
-}
-
-func (p *Parser) nextToken() {
-	p.currToken = p.peekToken
-	p.peekToken = p.lexer.NextToken()
-}
-
-func (p *Parser) expectPeek(t token.TokeType) bool {
-	if p.peekToken.Type == t {
-		p.nextToken()
-		return true
-	}
-
-	p.peekError(t)
-	return false
-}
-
-func (p *Parser) tokenIs(tok *token.Token, t token.TokeType) bool {
-	return tok.Type == t
 }

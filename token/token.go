@@ -15,7 +15,7 @@ const (
 	// operators
 	PLUS         = "+"
 	MINUS        = "-"
-	ASTRISK      = "*"
+	ASTERISK     = "*"
 	SLASH        = "/"
 	BANG         = "!"
 	LESS_THAN    = "<"

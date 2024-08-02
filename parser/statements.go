@@ -33,3 +33,15 @@ func (p *Parser) parseReturnStatement() *ast.ReturnStatement {
 
 	return stmt
 }
+
+func (p *Parser) parseExpressionStatement() *ast.ExpressionStatement {
+	stmt := &ast.ExpressionStatement{
+		Token:      p.currToken,
+		Expression: p.parseExpression(LOWEST),
+	}
+	if p.tokenIs(p.peekToken, token.SEMICOLON) {
+		p.nextToken()
+	}
+
+	return stmt
+}

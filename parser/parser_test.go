@@ -38,31 +38,6 @@ func TestLetStatement(t *testing.T) {
 
 }
 
-func testLetStatement(t *testing.T, stmt ast.Statement, name string) bool {
-	if stmt.TokenLiteral() != "let" {
-		t.Errorf("Error: incorrect token literal.\texpected='let'\tgot='%s'", stmt.TokenLiteral())
-		return false
-	}
-
-	letStmt, ok := stmt.(*ast.LetStatement)
-	if !ok {
-		t.Errorf("Error: incorrect statment.\texpected='*ast.LetStatment'\tgot='%T'", stmt)
-		return false
-	}
-
-	if letStmt.Name.Value != name {
-		t.Errorf("Error: incorrect name value.\texpected='%s'\tgot='%s'", name, letStmt.Name.Value)
-		return false
-	}
-
-	if letStmt.Name.TokenLiteral() != name {
-		t.Errorf("Error: incorrect value token literal.\texpected='%s'\tgot='%s'", name, letStmt.Value.TokenLiteral())
-		return false
-	}
-
-	return true
-}
-
 func TestReturnStatement(t *testing.T) {
 	input := `
 	return 5;
@@ -92,6 +67,35 @@ func TestReturnStatement(t *testing.T) {
 
 }
 
+func TestIdentifierExpression(t *testing.T) {
+	input := "foo;"
+
+	lexer := lexer.New(input)
+	parser := New(lexer)
+	program := parser.ParseProgram()
+	checkParserErrors(t, parser)
+
+	if len(program.Statements) != 1 {
+		t.Fatalf("program.Statments contains %d statements instead of 1.", len(program.Statements))
+	}
+
+	stmt, ok := program.Statements[0].(*ast.ExpressionStatement)
+	if !ok {
+		t.Errorf("Error: incorrect type.\texpected='*ast.ExpressionStatement'\tgot='%T'", program.Statements[0])
+	}
+
+	ident, ok := stmt.Expression.(*ast.Identifier)
+	if !ok {
+		t.Errorf("Error: incorrect type.\texpected='*ast.Identifier'\tgot='%T'", stmt.Expression)
+	}
+	if ident.Value != "foo" {
+		t.Errorf("Error: ident.Value isn't %q. got=%q", "foo", ident.Value)
+	}
+	if ident.TokenLiteral() != "foo" {
+		t.Errorf("Error: ident.TokenLiteral() isn't %q. got=%q", "foo", ident.TokenLiteral())
+	}
+}
+
 func checkParserErrors(t *testing.T, p *Parser) {
 	errors := p.Errors()
 	if len(errors) == 0 {
@@ -103,4 +107,29 @@ func checkParserErrors(t *testing.T, p *Parser) {
 		t.Errorf("parser error [%d]: %s", i+1, msg)
 	}
 	t.FailNow()
+}
+
+func testLetStatement(t *testing.T, stmt ast.Statement, name string) bool {
+	if stmt.TokenLiteral() != "let" {
+		t.Errorf("Error: incorrect token literal.\texpected='let'\tgot='%s'", stmt.TokenLiteral())
+		return false
+	}
+
+	letStmt, ok := stmt.(*ast.LetStatement)
+	if !ok {
+		t.Errorf("Error: incorrect statment.\texpected='*ast.LetStatment'\tgot='%T'", stmt)
+		return false
+	}
+
+	if letStmt.Name.Value != name {
+		t.Errorf("Error: incorrect name value.\texpected='%s'\tgot='%s'", name, letStmt.Name.Value)
+		return false
+	}
+
+	if letStmt.Name.TokenLiteral() != name {
+		t.Errorf("Error: incorrect value token literal.\texpected='%s'\tgot='%s'", name, letStmt.Value.TokenLiteral())
+		return false
+	}
+
+	return true
 }
