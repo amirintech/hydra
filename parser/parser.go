@@ -33,12 +33,18 @@ func New(l *lexer.Lexer) *Parser {
 	parser.nextToken() // init peekToken
 	parser.nextToken() // init currToken
 
+	// ============= TODO: REFACTOR THIS MESS =======================
 	// prefix functions
 	prefixTokenTypes := []token.TokeType{
 		token.IDENT, token.INT, token.BANG, token.MINUS,
+		token.TRUE, token.FALSE, token.LPAREN, token.IF,
+		token.FUNCTION,
 	}
 	prefixTokenFuncs := []prefixParseFunc{
-		parser.parseIdentifier, parser.parseIntegerLiteral, parser.parsePrefixExpression, parser.parsePrefixExpression,
+		parser.parseIdentifier, parser.parseIntegerLiteral,
+		parser.parsePrefixExpression, parser.parsePrefixExpression,
+		parser.parseBoolean, parser.parseBoolean, parser.parseGroupedExpression,
+		parser.parseIfExpression, parser.parseFunctionLiteral,
 	}
 	for i, tokType := range prefixTokenTypes {
 		parser.registerPrefixFn(tokType, prefixTokenFuncs[i])
@@ -52,6 +58,8 @@ func New(l *lexer.Lexer) *Parser {
 	for _, tokType := range infixTokenTypes {
 		parser.registerInfixFn(tokType, parser.parseInfixExpression)
 	}
+	parser.registerInfixFn(token.LPAREN, parser.parseCallExpression)
+	// =============================================================
 
 	return parser
 }

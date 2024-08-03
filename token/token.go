@@ -25,7 +25,7 @@ const (
 	NOT_EQUAL    = "!="
 
 	// delimiters
-	COMA      = ","
+	COMMA     = ","
 	SEMICOLON = ";"
 	LPAREN    = "("
 	RPAREN    = ")"
