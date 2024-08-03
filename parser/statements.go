@@ -18,7 +18,7 @@ func (p *Parser) parseLetStatement() *ast.LetStatement {
 
 	p.nextToken()
 	stmt.Value = p.parseExpression(LOWEST)
-	for !p.tokenIs(p.currToken, token.SEMICOLON) {
+	if !p.tokenIs(p.currToken, token.SEMICOLON) {
 		p.nextToken()
 	}
 
