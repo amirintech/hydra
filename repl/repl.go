@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 
+	"github.com/amirintech/hydra-compiler/eval"
 	"github.com/amirintech/hydra-compiler/lexer"
 	"github.com/amirintech/hydra-compiler/parser"
 )
@@ -31,6 +32,9 @@ func Run(in io.Reader, out io.Writer) {
 			continue
 		}
 
-		fmt.Fprintf(out, "%s\n", program.String())
+		evaluated := eval.Eval(program)
+		if evaluated != nil {
+			fmt.Fprintf(out, "%s\n", evaluated.Inspect())
+		}
 	}
 }
